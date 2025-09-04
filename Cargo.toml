@@ -1,0 +1,20 @@
+[package]
+name = "sqlx-tracing"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["sqlite", "postgres"]
+postgres = ["sqlx/postgres"]
+sqlite = ["sqlx/sqlite"]
+
+[dependencies]
+futures = { version = "0.3" }
+sqlx = { version = "0.8", default-features = false, features = ["derive"] }
+tracing = { version = "0.1" }
+
+[dev-dependencies]
+serial_test = { version = "3.2" }
+sqlx = { version = "0.8", features = ["runtime-tokio"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tracing-subscriber = "0.3"
