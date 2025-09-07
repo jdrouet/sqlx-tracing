@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 pub mod macros;
 mod pool;
 pub mod prelude;
