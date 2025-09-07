@@ -1,4 +1,4 @@
-#![cfg(feature = "sqlite")]
+#![cfg(feature = "postgres")]
 
 use std::time::Duration;
 

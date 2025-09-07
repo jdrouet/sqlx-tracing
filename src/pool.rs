@@ -10,7 +10,7 @@ fn record_error(err: &sqlx::Error) {
         | sqlx::Error::ColumnNotFound(_)
         | sqlx::Error::Decode { .. }
         | sqlx::Error::Encode { .. }
-        | sqlx::Error::RowNotFound { .. }
+        | sqlx::Error::RowNotFound
         | sqlx::Error::TypeNotFound { .. } => {
             span.record("error.kind", "client");
         }
