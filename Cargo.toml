@@ -14,7 +14,19 @@ sqlx = { version = "0.8", default-features = false, features = ["derive"] }
 tracing = { version = "0.1" }
 
 [dev-dependencies]
+anyhow = "*"
+opentelemetry = "*"
+opentelemetry-otlp = { version = "*", features = ["grpc-tonic"] }
+opentelemetry-semantic-conventions = "*"
+opentelemetry_sdk = { version = "*", features = ["rt-tokio"] }
+opentelemetry-appender-tracing = { version = "0.30", features = [
+    "experimental_metadata_attributes",
+    "experimental_use_tracing_span_context",
+] }
 serial_test = { version = "3.2" }
 sqlx = { version = "0.8", features = ["runtime-tokio"] }
+tempfile = "*"
+testcontainers = "*"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-tracing-subscriber = "0.3"
+tracing-opentelemetry = "*"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
