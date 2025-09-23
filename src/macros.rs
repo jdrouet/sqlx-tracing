@@ -4,7 +4,7 @@ macro_rules! query_span {
         tracing::info_span!(
             $name,
             "db.system" = DB::SYSTEM,
-            "db.query.text" = ?$statement,
+            "db.query.text" = $statement,
             "db.response.returned_rows" = tracing::field::Empty,
             "error.kind" = tracing::field::Empty,
             "error.message" = tracing::field::Empty,

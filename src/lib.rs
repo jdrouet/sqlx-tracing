@@ -30,7 +30,7 @@ where
     DB: sqlx::Database,
 {
     /// Retrieves a connection and immediately begins a new transaction.
-    pub async fn begin(&self) -> Result<Transaction<'static, DB>, sqlx::Error> {
+    pub async fn begin<'c>(&'c self) -> Result<Transaction<'c, DB>, sqlx::Error> {
         self.0.begin().await.map(Transaction::from)
     }
 }

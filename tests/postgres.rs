@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer};
+use opentelemetry::trace::Tracer;
 use sqlx::Postgres;
 use testcontainers::{
     GenericImage, ImageExt,
@@ -45,31 +45,20 @@ impl PostgresContainer {
     }
 }
 
+async fn should_trace_pool(
+    observability: &opentelemetry_testing::ObservabilityContainer,
+    provider: &opentelemetry_testing::OpenTelemetryProvider,
+) {
+    let container = PostgresContainer::create().await;
+    let pool = container.client().await;
+
+    common::should_trace_pool(observability, provider, pool).await;
+}
+
 #[tokio::test]
-async fn should_trace_pool() {
-    let container = common::ObservabilityContainer::create().await;
-    let provider = container.install().await;
+async fn execute() {
+    let observability = opentelemetry_testing::ObservabilityContainer::create().await;
+    let provider = observability.install().await;
 
-    let db_container = PostgresContainer::create().await;
-
-    let tracer = opentelemetry::global::tracer("testing");
-    let span = tracer.span_builder("trace pool").start(&tracer);
-    let ctx = opentelemetry::Context::new().with_span(span);
-    async move {
-        let pool = db_container.client().await;
-        let result: Option<i32> = sqlx::query_scalar("select 1")
-            .fetch_optional(&pool)
-            .await
-            .unwrap();
-        assert_eq!(result, Some(1));
-    }
-    .with_context(ctx)
-    .await;
-
-    provider.shutdown();
-
-    tokio::time::sleep(Duration::from_secs(1)).await;
-
-    let traces = container.traces();
-    assert!(traces.contains("sqlx.fetch_optional"));
+    should_trace_pool(&observability, &provider).await;
 }

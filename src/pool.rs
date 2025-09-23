@@ -24,8 +24,7 @@ fn record_error(err: &sqlx::Error) {
 
 impl<'p, DB> sqlx::Executor<'p> for &'_ crate::Pool<DB>
 where
-    DB: sqlx::Database,
-    DB: crate::prelude::Database,
+    DB: sqlx::Database + crate::prelude::Database,
     for<'c> &'c mut DB::Connection: sqlx::Executor<'c, Database = DB>,
 {
     type Database = DB;
