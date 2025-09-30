@@ -1,27 +1,6 @@
 use futures::{StreamExt, TryStreamExt};
 use tracing::Instrument;
 
-fn record_error(err: &sqlx::Error) {
-    let span = tracing::Span::current();
-    span.record("otel.status_code", "error");
-    match err {
-        sqlx::Error::ColumnIndexOutOfBounds { .. }
-        | sqlx::Error::ColumnDecode { .. }
-        | sqlx::Error::ColumnNotFound(_)
-        | sqlx::Error::Decode { .. }
-        | sqlx::Error::Encode { .. }
-        | sqlx::Error::RowNotFound
-        | sqlx::Error::TypeNotFound { .. } => {
-            span.record("error.type", "client");
-        }
-        _ => {
-            span.record("error.type", "server");
-        }
-    }
-    span.record("error.message", err.to_string());
-    span.record("error.stacktrace", format!("{err:?}"));
-}
-
 impl<'p, DB> sqlx::Executor<'p> for &'_ crate::Pool<DB>
 where
     DB: sqlx::Database + crate::prelude::Database,
@@ -36,7 +15,7 @@ where
     ) -> futures::future::BoxFuture<'e, Result<sqlx::Describe<Self::Database>, sqlx::Error>> {
         let span = crate::query_span!("sqlx.describe", sql);
         let fut = self.inner.describe(sql).instrument(span);
-        Box::pin(async move { fut.await.inspect_err(record_error) })
+        Box::pin(async move { fut.await.inspect_err(crate::error::record_error) })
     }
 
     fn execute<'e, 'q: 'e, E>(
@@ -52,7 +31,7 @@ where
         let sql = query.sql();
         let span = crate::query_span!("sqlx.execute", sql);
         let fut = self.inner.execute(query).instrument(span);
-        Box::pin(async move { fut.await.inspect_err(record_error) })
+        Box::pin(async move { fut.await.inspect_err(crate::error::record_error) })
     }
 
     fn execute_many<'e, 'q: 'e, E>(
@@ -74,7 +53,7 @@ where
                 .inspect(move |_| {
                     let _enter = span.enter();
                 })
-                .inspect_err(record_error),
+                .inspect_err(crate::error::record_error),
         )
     }
 
@@ -94,7 +73,7 @@ where
                 .inspect(move |_| {
                     let _enter = span.enter();
                 })
-                .inspect_err(record_error),
+                .inspect_err(crate::error::record_error),
         )
     }
 
@@ -117,7 +96,7 @@ where
                     let span = tracing::Span::current();
                     span.record("db.response.returned_rows", res.len());
                 })
-                .inspect_err(record_error)
+                .inspect_err(crate::error::record_error)
         })
     }
 
@@ -145,7 +124,7 @@ where
                 .inspect(move |_| {
                     let _enter = span.enter();
                 })
-                .inspect_err(record_error),
+                .inspect_err(crate::error::record_error),
         )
     }
 
@@ -164,7 +143,7 @@ where
                 .inspect(|_| {
                     tracing::Span::current().record("db.response.returned_rows", 1);
                 })
-                .inspect_err(record_error)
+                .inspect_err(crate::error::record_error)
         })
     }
 
@@ -189,7 +168,7 @@ where
                         if res.is_some() { 1 } else { 0 },
                     );
                 })
-                .inspect_err(record_error)
+                .inspect_err(crate::error::record_error)
         })
     }
 
@@ -202,7 +181,7 @@ where
     > {
         let span = crate::query_span!("sqlx.prepare", query);
         let fut = self.inner.prepare(query).instrument(span);
-        Box::pin(async move { fut.await.inspect_err(record_error) })
+        Box::pin(async move { fut.await.inspect_err(crate::error::record_error) })
     }
 
     fn prepare_with<'e, 'q: 'e>(
@@ -215,6 +194,6 @@ where
     > {
         let span = crate::query_span!("sqlx.prepare_with", sql);
         let fut = self.inner.prepare_with(sql, parameters).instrument(span);
-        Box::pin(async move { fut.await.inspect_err(record_error) })
+        Box::pin(async move { fut.await.inspect_err(crate::error::record_error) })
     }
 }

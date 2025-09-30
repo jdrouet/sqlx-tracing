@@ -1,6 +1,7 @@
-#![doc = include_str!("../README.md")]
+// #![doc = include_str!("../README.md")]
 
-mod connection;
+// mod connection;
+pub(crate) mod error;
 pub mod macros;
 mod pool;
 pub mod prelude;
