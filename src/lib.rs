@@ -1,8 +1,10 @@
 #![doc = include_str!("../README.md")]
 
+mod connection;
 pub mod macros;
 mod pool;
 pub mod prelude;
+mod transaction;
 
 #[cfg(feature = "postgres")]
 pub mod postgres;
@@ -12,16 +14,19 @@ pub mod sqlite;
 
 /// An asynchronous pool of SQLx database connections.
 #[derive(Clone, Debug)]
-pub struct Pool<DB>(sqlx::Pool<DB>)
+pub struct Pool<DB>
 where
-    DB: sqlx::Database;
+    DB: sqlx::Database,
+{
+    inner: sqlx::Pool<DB>,
+}
 
 impl<DB> From<sqlx::Pool<DB>> for Pool<DB>
 where
     DB: sqlx::Database,
 {
-    fn from(value: sqlx::Pool<DB>) -> Self {
-        Self(value)
+    fn from(inner: sqlx::Pool<DB>) -> Self {
+        Self { inner }
     }
 }
 
@@ -31,21 +36,46 @@ where
 {
     /// Retrieves a connection and immediately begins a new transaction.
     pub async fn begin<'c>(&'c self) -> Result<Transaction<'c, DB>, sqlx::Error> {
-        self.0.begin().await.map(Transaction::from)
+        self.inner.begin().await.map(Transaction::from)
+    }
+
+    /// Retrieves a connection and immediately begins a new transaction.
+    pub async fn acquire(&self) -> Result<PoolConnection<DB>, sqlx::Error> {
+        self.inner.acquire().await.map(PoolConnection::from)
+    }
+}
+
+#[derive(Debug)]
+pub struct PoolConnection<DB>
+where
+    DB: sqlx::Database,
+{
+    inner: sqlx::pool::PoolConnection<DB>,
+}
+
+impl<DB> From<sqlx::pool::PoolConnection<DB>> for PoolConnection<DB>
+where
+    DB: sqlx::Database,
+{
+    fn from(inner: sqlx::pool::PoolConnection<DB>) -> Self {
+        Self { inner }
     }
 }
 
 /// An in-progress database transaction or savepoint.
 #[derive(Debug)]
-pub struct Transaction<'c, DB>(sqlx::Transaction<'c, DB>)
+pub struct Transaction<'c, DB>
 where
-    DB: sqlx::Database;
+    DB: sqlx::Database,
+{
+    inner: sqlx::Transaction<'c, DB>,
+}
 
 impl<'c, DB> From<sqlx::Transaction<'c, DB>> for Transaction<'c, DB>
 where
     DB: sqlx::Database,
 {
-    fn from(value: sqlx::Transaction<'c, DB>) -> Self {
-        Self(value)
+    fn from(inner: sqlx::Transaction<'c, DB>) -> Self {
+        Self { inner }
     }
 }
