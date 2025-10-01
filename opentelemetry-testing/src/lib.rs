@@ -218,7 +218,7 @@ impl ObservabilityContainer {
             .filter(|item| !item.is_empty())
             .last()
             .unwrap();
-        serde_json::from_str(&last).unwrap()
+        serde_json::from_str(last).unwrap()
     }
 
     pub async fn address(&self) -> String {

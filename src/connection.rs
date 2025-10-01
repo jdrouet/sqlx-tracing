@@ -1,7 +1,7 @@
 use futures::{StreamExt, TryStreamExt};
 use tracing::Instrument;
 
-impl<'c, DB> AsMut<<DB as sqlx::Database>::Connection> for crate::PoolConnection<DB>
+impl<DB> AsMut<<DB as sqlx::Database>::Connection> for crate::PoolConnection<DB>
 where
     DB: crate::prelude::Database + sqlx::Database,
 {
