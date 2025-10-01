@@ -2,8 +2,6 @@
 
 use std::sync::Arc;
 
-use sqlx::ConnectOptions;
-
 mod connection;
 mod pool;
 pub mod prelude;
@@ -41,6 +39,8 @@ pub struct PoolBuilder<DB: sqlx::Database> {
 impl From<sqlx::Pool<sqlx::Postgres>> for PoolBuilder<sqlx::Postgres> {
     /// Create a new builder from an existing SQLx pool.
     fn from(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
+        use sqlx::ConnectOptions;
+
         let url = pool.connect_options().to_url_lossy();
         let attributes = Attributes {
             name: None,
