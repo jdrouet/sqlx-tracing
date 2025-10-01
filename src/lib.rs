@@ -16,6 +16,8 @@ pub mod postgres;
 #[cfg(feature = "sqlite")]
 pub mod sqlite;
 
+/// Attributes describing the database connection and context.
+/// Used for span enrichment and attribute propagation.
 #[derive(Debug, Default)]
 struct Attributes {
     name: Option<String>,
@@ -24,6 +26,10 @@ struct Attributes {
     database: Option<String>,
 }
 
+/// Builder for constructing a [`Pool`] with custom attributes.
+///
+/// Allows setting database name, host, port, and other identifying information
+/// for tracing purposes.
 #[derive(Debug)]
 pub struct PoolBuilder<DB: sqlx::Database> {
     pool: sqlx::Pool<DB>,
@@ -31,6 +37,7 @@ pub struct PoolBuilder<DB: sqlx::Database> {
 }
 
 impl<DB: sqlx::Database> PoolBuilder<DB> {
+    /// Create a new builder from an existing SQLx pool.
     pub fn new(pool: sqlx::Pool<DB>) -> Self {
         let url = pool.connect_options().to_url_lossy();
         let attributes = Attributes {
@@ -44,26 +51,31 @@ impl<DB: sqlx::Database> PoolBuilder<DB> {
         Self { pool, attributes }
     }
 
+    /// Set a custom name for the pool (for peer.service attribute).
     pub fn with_name(mut self, name: impl Into<String>) -> Self {
         self.attributes.name = Some(name.into());
         self
     }
 
+    /// Set the database name attribute.
     pub fn with_database(mut self, database: impl Into<String>) -> Self {
         self.attributes.database = Some(database.into());
         self
     }
 
+    /// Set the host attribute.
     pub fn with_host(mut self, host: impl Into<String>) -> Self {
         self.attributes.host = Some(host.into());
         self
     }
 
+    /// Set the port attribute.
     pub fn with_port(mut self, port: u16) -> Self {
         self.attributes.port = Some(port);
         self
     }
 
+    /// Build the [`Pool`] with the configured attributes.
     pub fn build(self) -> Pool<DB> {
         Pool {
             inner: self.pool,
@@ -72,7 +84,9 @@ impl<DB: sqlx::Database> PoolBuilder<DB> {
     }
 }
 
-/// An asynchronous pool of SQLx database connections.
+/// An asynchronous pool of SQLx database connections with tracing instrumentation.
+///
+/// Wraps a SQLx [`Pool`] and propagates tracing attributes to all acquired connections.
 #[derive(Clone, Debug)]
 pub struct Pool<DB>
 where
@@ -86,6 +100,7 @@ impl<DB> From<sqlx::Pool<DB>> for Pool<DB>
 where
     DB: sqlx::Database,
 {
+    /// Convert a SQLx [`Pool`] into a tracing-instrumented [`Pool`].
     fn from(inner: sqlx::Pool<DB>) -> Self {
         PoolBuilder::new(inner).build()
     }
@@ -96,6 +111,8 @@ where
     DB: sqlx::Database,
 {
     /// Retrieves a connection and immediately begins a new transaction.
+    ///
+    /// The returned [`Transaction`] is instrumented for tracing.
     pub async fn begin<'c>(&'c self) -> Result<Transaction<'c, DB>, sqlx::Error> {
         self.inner.begin().await.map(|inner| Transaction {
             inner,
@@ -103,7 +120,7 @@ where
         })
     }
 
-    /// Retrieves a connection and immediately begins a new transaction.
+    /// Acquires a pooled connection, instrumented for tracing.
     pub async fn acquire(&self) -> Result<PoolConnection<DB>, sqlx::Error> {
         self.inner.acquire().await.map(|inner| PoolConnection {
             attributes: self.attributes.clone(),
@@ -112,6 +129,9 @@ where
     }
 }
 
+/// Wrapper for a mutable SQLx connection reference with tracing attributes.
+///
+/// Used internally for transaction and pool connection executors.
 pub struct Connection<'c, DB>
 where
     DB: sqlx::Database,
@@ -126,6 +146,9 @@ impl<'c, DB: sqlx::Database> std::fmt::Debug for Connection<'c, DB> {
     }
 }
 
+/// A pooled SQLx connection instrumented for tracing.
+///
+/// Implements [`sqlx::Executor`] and propagates tracing attributes.
 #[derive(Debug)]
 pub struct PoolConnection<DB>
 where
@@ -135,7 +158,9 @@ where
     attributes: Arc<Attributes>,
 }
 
-/// An in-progress database transaction or savepoint.
+/// An in-progress database transaction or savepoint, instrumented for tracing.
+///
+/// Wraps a SQLx [`Transaction`] and propagates tracing attributes.
 #[derive(Debug)]
 pub struct Transaction<'c, DB>
 where

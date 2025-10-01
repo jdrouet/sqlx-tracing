@@ -6,6 +6,9 @@ where
     DB: crate::prelude::Database + sqlx::Database,
     for<'a> &'a mut DB::Connection: sqlx::Executor<'a, Database = DB>,
 {
+    /// Returns a tracing-instrumented executor for this transaction.
+    ///
+    /// This allows running queries with full span context and attributes.
     pub fn executor(&mut self) -> crate::Connection<'_, DB> {
         crate::Connection {
             inner: &mut *self.inner,
@@ -14,6 +17,10 @@ where
     }
 }
 
+/// Implements `sqlx::Executor` for a mutable reference to a tracing-instrumented transaction.
+///
+/// Each method creates a tracing span for the SQL operation, attaches relevant attributes,
+/// and records errors or row counts as appropriate for observability.
 impl<'c, DB> sqlx::Executor<'c> for &'c mut crate::Transaction<'c, DB>
 where
     DB: crate::prelude::Database + sqlx::Database,
