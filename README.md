@@ -31,7 +31,15 @@ Wrap your SQLx pool:
 
 ```rust,ignore
 let pool = sqlx::PgPool::connect(&url).await?;
+// the attributes will be resolved from the url
 let traced_pool = sqlx_tracing::Pool::from(pool);
+// or manually overwrite them
+let traced_pool = sqlx_tracing::PoolBuilder::new(pool)
+    .with_name("my-domain-database")
+    .with_database("database")
+    .with_host("somewhere")
+    .with_port(1234)
+    .build();
 ```
 
 Use the traced pool as you would a normal SQLx pool:
