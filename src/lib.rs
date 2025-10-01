@@ -36,9 +36,11 @@ pub struct PoolBuilder<DB: sqlx::Database> {
     attributes: Attributes,
 }
 
-impl<DB: sqlx::Database> PoolBuilder<DB> {
+// this is required because `pool.connect_options().to_url_lossy()` panics with sqlite
+#[cfg(feature = "postgres")]
+impl From<sqlx::Pool<sqlx::Postgres>> for PoolBuilder<sqlx::Postgres> {
     /// Create a new builder from an existing SQLx pool.
-    pub fn new(pool: sqlx::Pool<DB>) -> Self {
+    fn from(pool: sqlx::Pool<sqlx::Postgres>) -> Self {
         let url = pool.connect_options().to_url_lossy();
         let attributes = Attributes {
             name: None,
@@ -50,7 +52,28 @@ impl<DB: sqlx::Database> PoolBuilder<DB> {
         };
         Self { pool, attributes }
     }
+}
 
+// this is required because `pool.connect_options().to_url_lossy()` panics with sqlite
+#[cfg(feature = "sqlite")]
+impl From<sqlx::Pool<sqlx::Sqlite>> for PoolBuilder<sqlx::Sqlite> {
+    /// Create a new builder from an existing SQLx pool.
+    fn from(pool: sqlx::Pool<sqlx::Sqlite>) -> Self {
+        let attributes = Attributes {
+            name: None,
+            host: pool
+                .connect_options()
+                .get_filename()
+                .to_str()
+                .map(String::from),
+            port: None,
+            database: None,
+        };
+        Self { pool, attributes }
+    }
+}
+
+impl<DB: sqlx::Database> PoolBuilder<DB> {
     /// Set a custom name for the pool (for peer.service attribute).
     pub fn with_name(mut self, name: impl Into<String>) -> Self {
         self.attributes.name = Some(name.into());
@@ -99,10 +122,11 @@ where
 impl<DB> From<sqlx::Pool<DB>> for Pool<DB>
 where
     DB: sqlx::Database,
+    PoolBuilder<DB>: From<sqlx::Pool<DB>>,
 {
     /// Convert a SQLx [`Pool`] into a tracing-instrumented [`Pool`].
     fn from(inner: sqlx::Pool<DB>) -> Self {
-        PoolBuilder::new(inner).build()
+        PoolBuilder::from(inner).build()
     }
 }
 
