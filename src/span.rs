@@ -1,9 +1,9 @@
 #[macro_export]
 macro_rules! instrument {
-    ($name:expr, $statement:expr) => {
+    ($name:expr, $statement:expr, $attributes:expr) => {
         tracing::info_span!(
             $name,
-            "db.name" = ::tracing::field::Empty,
+            "db.name" = $attributes.database,
             "db.operation" = ::tracing::field::Empty,
             "db.query.text" = $statement,
             "db.response.affected_rows" = ::tracing::field::Empty,
@@ -14,12 +14,12 @@ macro_rules! instrument {
             "error.type" = ::tracing::field::Empty,
             "error.message" = ::tracing::field::Empty,
             "error.stacktrace" = ::tracing::field::Empty,
-            "net.peer.name" = ::tracing::field::Empty,
-            "net.peer.port" = ::tracing::field::Empty,
+            "net.peer.name" = $attributes.host,
+            "net.peer.port" = $attributes.port,
             "otel.kind" = "client",
             "otel.status_code" = ::tracing::field::Empty,
             "otel.status_description" = ::tracing::field::Empty,
-            "peer.service" = ::tracing::field::Empty,
+            "peer.service" = $attributes.name,
         )
     };
 }
@@ -40,6 +40,7 @@ pub fn record_optional<T>(value: &Option<T>) {
 pub fn record_error(err: &sqlx::Error) {
     let span = tracing::Span::current();
     span.record("otel.status_code", "error");
+    span.record("otel.status_description", err.to_string());
     match err {
         sqlx::Error::ColumnIndexOutOfBounds { .. }
         | sqlx::Error::ColumnDecode { .. }

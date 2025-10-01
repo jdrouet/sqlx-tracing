@@ -9,6 +9,7 @@ where
     pub fn executor(&mut self) -> crate::Connection<'_, DB> {
         crate::Connection {
             inner: &mut *self.inner,
+            attributes: self.attributes.clone(),
         }
     }
 }
@@ -28,7 +29,8 @@ where
     where
         'c: 'e,
     {
-        let span = crate::instrument!("sqlx.describe", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.describe", sql, attrs);
         Box::pin(
             async move {
                 let fut = (&mut self.inner).describe(sql);
@@ -50,7 +52,8 @@ where
         'c: 'e,
     {
         let sql = query.sql();
-        let span = crate::instrument!("sqlx.execute", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.execute", sql, attrs);
         let fut = (&mut self.inner).execute(query);
         Box::pin(async move { fut.await.inspect_err(crate::span::record_error) }.instrument(span))
     }
@@ -67,7 +70,8 @@ where
         'c: 'e,
     {
         let sql = query.sql();
-        let span = crate::instrument!("sqlx.execute_many", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.execute_many", sql, attrs);
         let stream = (&mut self.inner).execute_many(query);
         use futures::StreamExt;
         Box::pin(
@@ -88,7 +92,8 @@ where
         'c: 'e,
     {
         let sql = query.sql();
-        let span = crate::instrument!("sqlx.fetch", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.fetch", sql, attrs);
         let stream = (&mut self.inner).fetch(query);
         use futures::StreamExt;
         Box::pin(
@@ -112,7 +117,8 @@ where
         'c: 'e,
     {
         let sql = query.sql();
-        let span = crate::instrument!("sqlx.fetch_all", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.fetch_all", sql, attrs);
         let fut = (&mut self.inner).fetch_all(query);
         Box::pin(
             async move {
@@ -145,7 +151,8 @@ where
         'c: 'e,
     {
         let sql = query.sql();
-        let span = crate::instrument!("sqlx.fetch_all", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.fetch_all", sql, attrs);
         let stream = (&mut self.inner).fetch_many(query);
         Box::pin(
             stream
@@ -165,7 +172,8 @@ where
         'c: 'e,
     {
         let sql = query.sql();
-        let span = crate::instrument!("sqlx.fetch_one", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.fetch_one", sql, attrs);
         let fut = (&mut self.inner).fetch_one(query);
         Box::pin(
             async move {
@@ -189,7 +197,8 @@ where
         'c: 'e,
     {
         let sql = query.sql();
-        let span = crate::instrument!("sqlx.fetch_optional", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.fetch_optional", sql, attrs);
         let fut = (&mut self.inner).fetch_optional(query);
         Box::pin(
             async move {
@@ -211,7 +220,8 @@ where
     where
         'c: 'e,
     {
-        let span = crate::instrument!("sqlx.prepare", query);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.prepare", query, attrs);
         let fut = (&mut self.inner).prepare(query);
         Box::pin(async move { fut.await.inspect_err(crate::span::record_error) }.instrument(span))
     }
@@ -227,7 +237,8 @@ where
     where
         'c: 'e,
     {
-        let span = crate::instrument!("sqlx.prepare_with", sql);
+        let attrs = &self.attributes;
+        let span = crate::instrument!("sqlx.prepare_with", sql, attrs);
         let fut = (&mut self.inner).prepare_with(sql, parameters);
         Box::pin(async move { fut.await.inspect_err(crate::span::record_error) }.instrument(span))
     }
