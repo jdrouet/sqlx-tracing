@@ -2,7 +2,6 @@
 
 use std::time::Duration;
 
-use opentelemetry::trace::Tracer;
 use sqlx::Postgres;
 use testcontainers::{
     GenericImage, ImageExt,
@@ -45,20 +44,37 @@ impl PostgresContainer {
     }
 }
 
-async fn should_trace_pool(
-    observability: &opentelemetry_testing::ObservabilityContainer,
-    provider: &opentelemetry_testing::OpenTelemetryProvider,
-) {
-    let container = PostgresContainer::create().await;
-    let pool = container.client().await;
-
-    common::should_trace_pool(observability, provider, pool).await;
-}
-
 #[tokio::test]
 async fn execute() {
     let observability = opentelemetry_testing::ObservabilityContainer::create().await;
     let provider = observability.install().await;
 
-    should_trace_pool(&observability, &provider).await;
+    let container = PostgresContainer::create().await;
+    let pool = container.client().await;
+
+    common::should_trace("trace_pool", "postgresql", &observability, &provider, &pool).await;
+
+    {
+        let mut conn = pool.acquire().await.unwrap();
+        common::should_trace(
+            "trace_conn",
+            "postgresql",
+            &observability,
+            &provider,
+            &mut conn,
+        )
+        .await;
+    }
+
+    {
+        let mut tx: sqlx_tracing::Transaction<'_, Postgres> = pool.begin().await.unwrap();
+        common::should_trace(
+            "trace_tx",
+            "postgresql",
+            &observability,
+            &provider,
+            &mut tx.executor(),
+        )
+        .await;
+    }
 }

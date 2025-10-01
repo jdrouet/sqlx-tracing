@@ -1,4 +1,4 @@
-// #![doc = include_str!("../README.md")]
+#![doc = include_str!("../README.md")]
 
 mod connection;
 pub(crate) mod error;
@@ -43,6 +43,19 @@ where
     /// Retrieves a connection and immediately begins a new transaction.
     pub async fn acquire(&self) -> Result<PoolConnection<DB>, sqlx::Error> {
         self.inner.acquire().await.map(PoolConnection::from)
+    }
+}
+
+pub struct Connection<'c, DB>
+where
+    DB: sqlx::Database,
+{
+    inner: &'c mut DB::Connection,
+}
+
+impl<'c, DB: sqlx::Database> std::fmt::Debug for Connection<'c, DB> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Connection").finish_non_exhaustive()
     }
 }
 

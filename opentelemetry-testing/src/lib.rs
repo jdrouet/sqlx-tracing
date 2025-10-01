@@ -210,8 +210,15 @@ impl ObservabilityContainer {
     }
 
     pub fn json_traces(&self) -> RootTrace {
+        // traces are appended to the same file, one line per flush,
+        // so we need to take the last one only.
         let content = self.traces();
-        serde_json::from_str(&content).unwrap()
+        let last = content
+            .split("\n")
+            .filter(|item| !item.is_empty())
+            .last()
+            .unwrap();
+        serde_json::from_str(&last).unwrap()
     }
 
     pub async fn address(&self) -> String {

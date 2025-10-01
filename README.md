@@ -29,16 +29,34 @@ Enable the desired database feature:
 
 Wrap your SQLx pool:
 
-```rust
+```rust,ignore
 let pool = sqlx::PgPool::connect(&url).await?;
 let traced_pool = sqlx_tracing::Pool::from(pool);
 ```
 
 Use the traced pool as you would a normal SQLx pool:
 
-```rust
+```rust,ignore
 let result: Option<i32> = sqlx::query_scalar("select 1")
-    .fetch_optional(&traced_pool)
+    .fetch_optional(traced_pool)
+    .await?;
+```
+
+This works also with pool connections
+
+```rust,ignore
+let mut conn = traced_pool.acquire().await?;
+let result: Option<i32> = sqlx::query_scalar("select 1")
+    .fetch_optional(&mut conn)
+    .await?;
+```
+
+And transactions
+
+```rust,ignore
+let mut tx = traced_pool.begin().await?;
+let result: Option<i32> = sqlx::query_scalar("select 1")
+    .fetch_optional(&mut tx.executor())
     .await?;
 ```
 
