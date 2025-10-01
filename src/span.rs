@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! query_span {
+macro_rules! instrument {
     ($name:expr, $statement:expr) => {
         tracing::info_span!(
             $name,
@@ -22,4 +22,38 @@ macro_rules! query_span {
             "peer.service" = ::tracing::field::Empty,
         )
     };
+}
+
+pub fn record_one<T>(_value: &T) {
+    let span = tracing::Span::current();
+    span.record("db.response.returned_rows", 1);
+}
+
+pub fn record_optional<T>(value: &Option<T>) {
+    let span = tracing::Span::current();
+    span.record(
+        "db.response.returned_rows",
+        if value.is_some() { 1 } else { 0 },
+    );
+}
+
+pub fn record_error(err: &sqlx::Error) {
+    let span = tracing::Span::current();
+    span.record("otel.status_code", "error");
+    match err {
+        sqlx::Error::ColumnIndexOutOfBounds { .. }
+        | sqlx::Error::ColumnDecode { .. }
+        | sqlx::Error::ColumnNotFound(_)
+        | sqlx::Error::Decode { .. }
+        | sqlx::Error::Encode { .. }
+        | sqlx::Error::RowNotFound
+        | sqlx::Error::TypeNotFound { .. } => {
+            span.record("error.type", "client");
+        }
+        _ => {
+            span.record("error.type", "server");
+        }
+    }
+    span.record("error.message", err.to_string());
+    span.record("error.stacktrace", format!("{err:?}"));
 }

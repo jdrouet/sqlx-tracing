@@ -40,4 +40,8 @@ pub async fn should_trace<'c, DB, E>(
         .unwrap();
     assert_eq!(next.string_attribute("db.system.name").unwrap(), system);
     assert_eq!(next.string_attribute("db.query.text").unwrap(), "select 1");
+    assert_eq!(
+        next.int_attribute("db.response.returned_rows").unwrap(),
+        "1"
+    );
 }

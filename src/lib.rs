@@ -1,10 +1,9 @@
 #![doc = include_str!("../README.md")]
 
 mod connection;
-pub(crate) mod error;
-pub mod macros;
 mod pool;
 pub mod prelude;
+pub(crate) mod span;
 mod transaction;
 
 #[cfg(feature = "postgres")]

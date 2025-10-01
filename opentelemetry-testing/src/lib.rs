@@ -329,6 +329,15 @@ pub struct Span {
 }
 
 impl Span {
+    pub fn int_attribute(&self, name: &str) -> Option<&str> {
+        self.attributes
+            .iter()
+            .find(|attr| attr.key == name)
+            .and_then(|attr| attr.value.as_object())
+            .and_then(|obj| obj.get("intValue"))
+            .and_then(|value| value.as_str())
+    }
+
     pub fn string_attribute(&self, name: &str) -> Option<&str> {
         self.attributes
             .iter()
