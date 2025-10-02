@@ -1543,6 +1543,8 @@ checksum = "83d059a296a47436748557a353c5e6c5705b9470ef6c95cfc52c21a8814ddac2"
 [[package]]
 name = "opentelemetry-testing"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "562407eb254fea88076c8a410a733a8ee2075fd9c7fbde3da2a03d29e2cef104"
 dependencies = [
  "anyhow",
  "opentelemetry",
