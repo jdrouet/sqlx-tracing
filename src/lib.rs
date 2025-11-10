@@ -14,6 +14,9 @@ pub mod postgres;
 #[cfg(feature = "sqlite")]
 pub mod sqlite;
 
+#[cfg(feature = "mysql")]
+pub mod mysql;
+
 /// Attributes describing the database connection and context.
 /// Used for span enrichment and attribute propagation.
 #[derive(Debug, Default)]
@@ -68,6 +71,26 @@ impl From<sqlx::Pool<sqlx::Sqlite>> for PoolBuilder<sqlx::Sqlite> {
                 .map(String::from),
             port: None,
             database: None,
+        };
+        Self { pool, attributes }
+    }
+}
+
+// this is required because `pool.connect_options().to_url_lossy()` panics with sqlite
+#[cfg(feature = "mysql")]
+impl From<sqlx::Pool<sqlx::MySql>> for PoolBuilder<sqlx::MySql> {
+    /// Create a new builder from an existing SQLx pool.
+    fn from(pool: sqlx::Pool<sqlx::MySql>) -> Self {
+        use sqlx::ConnectOptions;
+
+        let url = pool.connect_options().to_url_lossy();
+        let attributes = Attributes {
+            name: None,
+            host: url.host_str().map(String::from),
+            port: url.port(),
+            database: url
+                .path_segments()
+                .and_then(|mut segments| segments.next().map(String::from)),
         };
         Self { pool, attributes }
     }
