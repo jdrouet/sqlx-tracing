@@ -1,4 +1,5 @@
 use futures::{StreamExt, TryStreamExt};
+use sqlx::Error;
 use tracing::Instrument;
 
 impl<'c, DB> crate::Transaction<'c, DB>
@@ -14,6 +15,16 @@ where
             inner: &mut *self.inner,
             attributes: self.attributes.clone(),
         }
+    }
+
+    /// Commits this transaction or savepoint.
+    pub async fn commit(self) -> Result<(), Error> {
+        self.inner.commit().await
+    }
+
+    /// Aborts this transaction or savepoint.
+    pub async fn rollback(self) -> Result<(), Error> {
+        self.inner.rollback().await
     }
 }
 
