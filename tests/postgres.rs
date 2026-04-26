@@ -3,6 +3,7 @@
 use std::time::Duration;
 
 use sqlx::Postgres;
+use sqlx_tracing::Pool;
 use testcontainers::{
     GenericImage, ImageExt,
     core::{ContainerPort, WaitFor},
@@ -77,4 +78,10 @@ async fn execute() {
         )
         .await;
     }
+}
+
+#[test]
+fn pool_postgres_is_clone() {
+    fn assert_clone<T: Clone>() {}
+    assert_clone::<Pool<Postgres>>();
 }
