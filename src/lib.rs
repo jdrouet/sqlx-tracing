@@ -143,7 +143,19 @@ where
             attributes: self.attributes.clone(),
         })
     }
-
+    
+    /// Attempts to retrieve a connection and immediately begins a new transaction if successful.
+    ///
+    /// The returned [`Transaction`] is instrumented for tracing.
+    pub async fn try_begin<'c>(&'c self) -> Result<Option<Transaction<'c, DB>>, sqlx::Error> {
+        self.inner.try_begin().await.map(|t| {
+            t.map(|inner| Transaction {
+                inner,
+                attributes: self.attributes.clone(),
+            })
+        })
+    }
+    
     /// Acquires a pooled connection, instrumented for tracing.
     pub async fn acquire(&self) -> Result<PoolConnection<DB>, sqlx::Error> {
         self.inner.acquire().await.map(|inner| PoolConnection {
