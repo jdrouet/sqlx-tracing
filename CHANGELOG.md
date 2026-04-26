@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/jdrouet/sqlx-tracing/compare/v0.2.0...v0.2.1) - 2026-04-26
+
+### Added
+
+- add MySQL support ([#4](https://github.com/jdrouet/sqlx-tracing/pull/4))
+- *(pool)* Add try_begin method ([#10](https://github.com/jdrouet/sqlx-tracing/pull/10))
+- add `Transaction::commit` and `Transaction::rollback` ([#5](https://github.com/jdrouet/sqlx-tracing/pull/5))
+
+### Fixed
+
+- relax Clone bound on Pool<DB> ([#14](https://github.com/jdrouet/sqlx-tracing/pull/14))
+
+### Other
+
+- bump dependencies ([#15](https://github.com/jdrouet/sqlx-tracing/pull/15))
+
 ## [0.2.0](https://github.com/jdrouet/sqlx-tracing/compare/v0.1.0...v0.2.0) - 2025-10-02
 
 ### Added
