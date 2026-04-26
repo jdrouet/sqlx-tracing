@@ -8,7 +8,7 @@
 - **OpenTelemetry Integration**: Traces are compatible with OpenTelemetry, making it easy to export to collectors and observability platforms.
 - **Error Recording**: Errors are automatically annotated with kind, message, and stacktrace in the tracing span.
 - **Returned Rows**: The number of rows returned by queries is recorded for observability.
-- **Database Agnostic**: Supports both PostgreSQL and SQLite via feature flags.
+- **Database Agnostic**: Supports PostgreSQL, MySQL, and SQLite via feature flags.
 - **Macros**: Includes a macro for consistent span creation around queries.
 
 ## Usage
@@ -25,6 +25,7 @@ tracing = "0.1"
 Enable the desired database feature:
 
 - For PostgreSQL: `features = ["postgres"]`
+- For MySQL: `features = ["mysql"]`
 - For SQLite: `features = ["sqlite"]`
 
 Wrap your SQLx pool:
@@ -74,7 +75,7 @@ To export traces, set up an OpenTelemetry collector and configure the tracing su
 
 ## Testing
 
-Integration tests are provided for both PostgreSQL and SQLite, using [testcontainers](https://docs.rs/testcontainers) and a local OpenTelemetry collector.
+Integration tests are provided for PostgreSQL, MySQL, and SQLite, using [testcontainers](https://docs.rs/testcontainers) and a local OpenTelemetry collector.
 
 ## License
 

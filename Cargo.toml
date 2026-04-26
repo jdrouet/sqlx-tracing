@@ -15,6 +15,7 @@ categories = ["database", "development-tools::debugging", "development-tools::pr
 [features]
 postgres = ["sqlx/postgres"]
 sqlite = ["sqlx/sqlite"]
+mysql = ["sqlx/mysql"]
 
 [dependencies]
 futures = { version = "0.3" }
