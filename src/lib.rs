@@ -37,7 +37,8 @@ pub struct PoolBuilder<DB: sqlx::Database> {
     attributes: Attributes,
 }
 
-// this is required because `pool.connect_options().to_url_lossy()` panics with sqlite
+// URL-based attribute extraction — works for TCP-backed drivers (postgres, mysql).
+// Sqlite has its own impl below because `to_url_lossy()` panics on sqlite options.
 #[cfg(feature = "postgres")]
 impl From<sqlx::Pool<sqlx::Postgres>> for PoolBuilder<sqlx::Postgres> {
     /// Create a new builder from an existing SQLx pool.
@@ -57,7 +58,6 @@ impl From<sqlx::Pool<sqlx::Postgres>> for PoolBuilder<sqlx::Postgres> {
     }
 }
 
-// this is required because `pool.connect_options().to_url_lossy()` panics with sqlite
 #[cfg(feature = "sqlite")]
 impl From<sqlx::Pool<sqlx::Sqlite>> for PoolBuilder<sqlx::Sqlite> {
     /// Create a new builder from an existing SQLx pool.
@@ -76,7 +76,6 @@ impl From<sqlx::Pool<sqlx::Sqlite>> for PoolBuilder<sqlx::Sqlite> {
     }
 }
 
-// this is required because `pool.connect_options().to_url_lossy()` panics with sqlite
 #[cfg(feature = "mysql")]
 impl From<sqlx::Pool<sqlx::MySql>> for PoolBuilder<sqlx::MySql> {
     /// Create a new builder from an existing SQLx pool.
