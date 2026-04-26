@@ -155,7 +155,7 @@ where
             attributes: self.attributes.clone(),
         })
     }
-    
+
     /// Attempts to retrieve a connection and immediately begins a new transaction if successful.
     ///
     /// The returned [`Transaction`] is instrumented for tracing.
@@ -167,7 +167,7 @@ where
             })
         })
     }
-    
+
     /// Acquires a pooled connection, instrumented for tracing.
     pub async fn acquire(&self) -> Result<PoolConnection<DB>, sqlx::Error> {
         self.inner.acquire().await.map(|inner| PoolConnection {
