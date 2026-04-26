@@ -1,6 +1,7 @@
 #![cfg(feature = "sqlite")]
 
 use sqlx::Sqlite;
+use sqlx_tracing::Pool;
 
 mod common;
 
@@ -30,4 +31,10 @@ async fn execute() {
         )
         .await;
     }
+}
+
+#[test]
+fn pool_sqlite_is_clone() {
+    fn assert_clone<T: Clone>() {}
+    assert_clone::<Pool<Sqlite>>();
 }

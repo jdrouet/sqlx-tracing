@@ -110,13 +110,25 @@ impl<DB: sqlx::Database> PoolBuilder<DB> {
 /// An asynchronous pool of SQLx database connections with tracing instrumentation.
 ///
 /// Wraps a SQLx [`Pool`] and propagates tracing attributes to all acquired connections.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Pool<DB>
 where
     DB: sqlx::Database,
 {
     inner: sqlx::Pool<DB>,
     attributes: Arc<Attributes>,
+}
+
+impl<DB> Clone for Pool<DB>
+where
+    DB: sqlx::Database,
+{
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+            attributes: self.attributes.clone(),
+        }
+    }
 }
 
 impl<DB> From<sqlx::Pool<DB>> for Pool<DB>
