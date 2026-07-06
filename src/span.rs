@@ -126,12 +126,13 @@ pub(crate) fn span_for_sql<DB: crate::prelude::Database>(
 /// - `$attributes`: Connection or pool attributes for peer and db context.
 ///
 /// This macro is used internally by the crate to instrument all major SQLx operations.
-#[macro_export]
 macro_rules! instrument {
     ($name:expr, $query:expr, $attributes:expr) => {
         $crate::span::prepare_query($name, $query, $attributes)
     };
 }
+
+pub(crate) use instrument;
 
 /// Records that a single row was returned in the current tracing span.
 /// Used for fetch_one operations.
