@@ -2,7 +2,33 @@ use sqlx::{Database, Execute};
 
 use crate::Attributes;
 
-pub(crate) type Reconstructed<DB> = (sqlx::SqlStr, Option<<DB as Database>::Arguments>);
+pub(crate) struct Reconstructed<DB: Database> {
+    sql: sqlx::SqlStr,
+    statement: Option<DB::Statement>,
+    arguments: Option<DB::Arguments>,
+    persistent: bool,
+}
+
+impl<'q, DB> Execute<'q, DB> for Reconstructed<DB>
+where
+    DB: Database,
+{
+    fn sql(self) -> sqlx::SqlStr {
+        self.sql
+    }
+
+    fn statement(&self) -> Option<&DB::Statement> {
+        self.statement.as_ref()
+    }
+
+    fn take_arguments(&mut self) -> Result<Option<DB::Arguments>, sqlx::error::BoxDynError> {
+        Ok(self.arguments.take())
+    }
+
+    fn persistent(&self) -> bool {
+        self.persistent
+    }
+}
 
 /// Extracts SQL for tracing, then rebuilds a query value for the inner executor.
 ///
@@ -16,10 +42,20 @@ where
     DB: Database + crate::prelude::Database,
     E: Execute<'q, DB>,
 {
+    let statement = query.statement().cloned();
+    let persistent = query.persistent();
     let arguments = query.take_arguments().map_err(sqlx::Error::Encode)?;
     let sql = query.sql();
     let span = span_for_sql::<DB>(name, sql.as_ref(), attributes);
-    Ok(((sql, arguments), span))
+    Ok((
+        Reconstructed {
+            sql,
+            statement,
+            arguments,
+            persistent,
+        },
+        span,
+    ))
 }
 
 /// Creates a tracing span for a SQL string without decomposing an [`Execute`] value.
@@ -72,6 +108,7 @@ pub(crate) fn span_for_sql<DB: crate::prelude::Database>(
         "sqlx.execute_many" => span!("sqlx.execute_many"),
         "sqlx.fetch" => span!("sqlx.fetch"),
         "sqlx.fetch_all" => span!("sqlx.fetch_all"),
+        "sqlx.fetch_many" => span!("sqlx.fetch_many"),
         "sqlx.fetch_one" => span!("sqlx.fetch_one"),
         "sqlx.fetch_optional" => span!("sqlx.fetch_optional"),
         "sqlx.prepare" => span!("sqlx.prepare"),
@@ -138,4 +175,22 @@ pub fn record_error(err: &sqlx::Error) {
     // Attach error message and stacktrace for debugging
     span.record("error.message", err.to_string());
     span.record("error.stacktrace", format!("{err:?}"));
+}
+
+#[cfg(all(test, feature = "sqlite"))]
+mod tests {
+    use sqlx::Execute;
+
+    use super::*;
+
+    #[test]
+    fn prepare_query_preserves_persistent_flag() {
+        let attributes = Attributes::default();
+        let query = sqlx::query::<sqlx::Sqlite>("select 1").persistent(false);
+
+        let (query, _) =
+            prepare_query::<sqlx::Sqlite, _>("sqlx.fetch_optional", query, &attributes).unwrap();
+
+        assert!(!query.persistent());
+    }
 }

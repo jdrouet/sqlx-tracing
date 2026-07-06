@@ -149,7 +149,7 @@ where
         'c: 'e,
     {
         let attrs = &self.attributes;
-        let (query, span) = match crate::instrument!("sqlx.fetch_all", query, attrs) {
+        let (query, span) = match crate::instrument!("sqlx.fetch_many", query, attrs) {
             Ok(v) => v,
             Err(e) => return Box::pin(futures::stream::once(futures::future::ready(Err(e)))),
         };
@@ -394,7 +394,7 @@ where
         'c: 'e,
     {
         let attrs = &self.attributes;
-        let (query, span) = match crate::instrument!("sqlx.fetch_all", query, attrs) {
+        let (query, span) = match crate::instrument!("sqlx.fetch_many", query, attrs) {
             Ok(v) => v,
             Err(e) => return Box::pin(futures::stream::once(futures::future::ready(Err(e)))),
         };
