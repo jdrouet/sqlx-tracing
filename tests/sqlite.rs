@@ -38,3 +38,30 @@ fn pool_sqlite_is_clone() {
     fn assert_clone<T: Clone>() {}
     assert_clone::<Pool<Sqlite>>();
 }
+
+#[cfg(feature = "offline")]
+#[tokio::test]
+async fn query_macro_executes_through_tracing_executors() {
+    let pool = sqlx::SqlitePool::connect(":memory:").await.unwrap();
+    let pool = sqlx_tracing::Pool::from(pool);
+
+    let pool_row = sqlx::query!("select 1 as col1")
+        .fetch_optional(&pool)
+        .await
+        .unwrap();
+    assert_eq!(pool_row.map(|row| row.col1), Some(1));
+
+    let mut conn = pool.acquire().await.unwrap();
+    let conn_row = sqlx::query!("select 1 as col1")
+        .fetch_optional(&mut conn)
+        .await
+        .unwrap();
+    assert_eq!(conn_row.map(|row| row.col1), Some(1));
+
+    let mut tx: sqlx_tracing::Transaction<'_, Sqlite> = pool.begin().await.unwrap();
+    let tx_row = sqlx::query!("select 1 as col1")
+        .fetch_optional(&mut tx.executor())
+        .await
+        .unwrap();
+    assert_eq!(tx_row.map(|row| row.col1), Some(1));
+}

@@ -1,0 +1,3 @@
+[env]
+# Let query! tests compile without checked-in .sqlx metadata.
+DATABASE_URL = { value = "sqlite::memory:", force = false }
