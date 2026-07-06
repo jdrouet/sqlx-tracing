@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- upgrade sqlx dependency from 0.8 to 0.9
+- adapt tracing instrumentation for sqlx 0.9's consuming `Execute` API and `SqlStr` type (queries are decomposed and reconstructed via `prepare_query` before execution)
+- declare Rust 1.94 as the minimum supported version to match sqlx 0.9
+
+### Added
+
+- add `offline` feature to enable `Executor::describe` tracing for compile-time `query!` / offline mode (sqlx 0.9 gates `describe` behind its own offline support; enable with `sqlx-tracing/offline` alongside your database feature, e.g. `features = ["postgres", "offline"]`)
+- add SQLite compile-time `query!` coverage for pools, acquired connections, and transaction executors
+
+### Fixed
+
+- gate `describe` implementations behind `offline` so the crate builds without enabling sqlx's offline machinery by default (fixes `cargo publish` verify failures)
+- preserve SQLx `Execute::persistent()` and prepared statement metadata while reconstructing queries for tracing
+- record `fetch_many` operations with a dedicated `sqlx.fetch_many` span name
+
 ## [0.2.1](https://github.com/jdrouet/sqlx-tracing/compare/v0.2.0...v0.2.1) - 2026-04-26
 
 ### Added
