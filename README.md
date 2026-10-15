@@ -13,12 +13,17 @@
 
 ## Usage
 
-Add `sqlx-tracing` to your `Cargo.toml`:
+This library targets SQLx 0.9 and requires Rust 1.94 or newer.
+SQLx 0.8 users should stay on sqlx-tracing 0.2.x.
+
+Add `sqlx-tracing` and SQLx 0.9 to your dependencies:
+
+SQLx 0.9 support is currently unreleased; use the Git dependency until it is published.
 
 ```toml
 [dependencies]
-sqlx-tracing = "0.1"
-sqlx = { version = "0.8", default-features = false, features = ["derive"] }
+sqlx-tracing = { git = "https://github.com/jdrouet/sqlx-tracing" }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "derive"] }
 tracing = "0.1"
 ```
 
@@ -47,7 +52,7 @@ Use the traced pool as you would a normal SQLx pool:
 
 ```rust,ignore
 let result: Option<i32> = sqlx::query_scalar("select 1")
-    .fetch_optional(traced_pool)
+    .fetch_optional(&traced_pool)
     .await?;
 ```
 
@@ -68,6 +73,10 @@ let result: Option<i32> = sqlx::query_scalar("select 1")
     .fetch_optional(&mut tx.executor())
     .await?;
 ```
+
+SQLx 0.9 accepts SQL literals directly. For dynamically constructed SQL, use
+`sqlx::QueryBuilder`, or explicitly audit the SQL and wrap it in
+`sqlx::AssertSqlSafe`. Bind parameters remain supported by all traced executors.
 
 ## OpenTelemetry Integration
 

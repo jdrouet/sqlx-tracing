@@ -5,6 +5,7 @@ use std::sync::Arc;
 mod connection;
 mod pool;
 pub mod prelude;
+mod query;
 pub(crate) mod span;
 mod transaction;
 

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Upgrade to SQLx 0.9 (breaking change); SQLx 0.8 users should stay on 0.2.x.
+- Require Rust 1.94 or newer, matching SQLx 0.9.
+- Adapt executor metadata methods to owned `SqlStr` values and statements.
+- Preserve bind arguments, cached statements, and persistence settings when
+	recording SQL text through SQLx 0.9's consuming `Execute::sql` API.
+
+### Fixed
+
+- Allow successive queries on traced transactions and transaction executors
+	without borrowing them for the full transaction lifetime.
+
 ## [0.2.1](https://github.com/jdrouet/sqlx-tracing/compare/v0.2.0...v0.2.1) - 2026-04-26
 
 ### Added

@@ -15,7 +15,7 @@ macro_rules! instrument {
             // Operation type (filled by SQLx or left empty)
             "db.operation" = ::tracing::field::Empty,
             // The SQL query text
-            "db.query.text" = $statement,
+            "db.query.text" = ::core::convert::AsRef::<str>::as_ref(&$statement),
             // Number of affected rows (to be filled after execution)
             "db.response.affected_rows" = ::tracing::field::Empty,
             // Number of returned rows (to be filled after execution)

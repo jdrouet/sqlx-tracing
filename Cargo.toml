@@ -2,6 +2,7 @@
 name = "sqlx-tracing"
 version = "0.2.1"
 edition = "2024"
+rust-version = "1.94"
 description = "OpenTelemetry-compatible tracing for SQLx database operations in Rust."
 license = "MIT"
 repository = "https://github.com/jdrouet/sqlx-tracing"
@@ -19,7 +20,8 @@ mysql = ["sqlx/mysql"]
 
 [dependencies]
 futures = { version = "0.3" }
-sqlx = { version = "0.8", default-features = false, features = ["derive"] }
+# `macros` enables SQLx's offline metadata API, including Executor::describe.
+sqlx = { version = "0.9", default-features = false, features = ["macros"] }
 tracing = { version = "0.1" }
 
 [dev-dependencies]
@@ -29,6 +31,6 @@ opentelemetry-testing = "0.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serial_test = { version = "3.4" }
-sqlx = { version = "0.8", features = ["runtime-tokio"] }
+sqlx = { version = "0.9", features = ["runtime-tokio"] }
 testcontainers = "0.25"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
